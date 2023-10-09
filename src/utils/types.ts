@@ -71,4 +71,4 @@ export interface CarMediaList {
 	type: MediaType;
 }
 
-export type MediaType = 'image/jpeg' | 'video/mp4' | 'image';
+export type MediaType = 'image/jpeg' | 'video/mp4' | 'image' | 'image/webp';
