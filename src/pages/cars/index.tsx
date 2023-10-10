@@ -1,64 +1,46 @@
-import CarCard from "@components/CarCard";
+import Navbar from "@layouts/Navbar";
 import RootLayout from "@layouts/RootLayout";
-import { Container, Grid, Pagination, Stack } from "@mui/material";
+import Hero from "@sections/Hero";
+import PopularBrands from "@sections/PopularBrands";
+import PopularCars from "@sections/PopularCars";
 import { baseUrl } from "@utils/constants";
-import { CarProps } from "@utils/types";
+import { CarProps, DataProps } from "@utils/types";
 import { GetServerSideProps } from "next";
-import { useRouter, usePathname } from "next/navigation";
+import Head from "next/head";
+
+interface IBrandProps {
+  data: DataProps;
+}
 
 interface ICarProps {
   cars: CarProps;
 }
 
-const Cars = ({ cars }: ICarProps) => {
-  const pathname = usePathname();
-  const router = useRouter();
+type Props = IBrandProps & ICarProps;
 
-  const handleChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    router.push(`${pathname}?page=${value}`);
-  };
-
+export default function Home({ data, cars }: Props) {
   return (
     <RootLayout>
-      <Container>
-        <Grid container spacing={2} mt={4}>
-          {cars.result.map((car) => {
-            return (
-              <Grid item xs={12} md={6} lg={4} key={car.id}>
-                <CarCard car={car} />
-              </Grid>
-            );
-          })}
-        </Grid>
+      <Head>
+        <title>autochek</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* <link rel="icon" href="/favicon.ico" /> */}
+      </Head>
 
-        <Stack
-          direction={"row"}
-          alignItems={"center"}
-          justifyContent={"center"}
-          mt={5}
-        >
-          <Pagination
-            count={cars.pagination.pageSize}
-            page={cars.pagination.currentPage}
-            onChange={handleChange}
-            variant="outlined"
-            shape="rounded"
-          />
-        </Stack>
-      </Container>
+      <Hero />
+      <PopularBrands brands={data.makeList} />
+      <PopularCars cars={cars.result} />
     </RootLayout>
   );
-};
-
-export default Cars;
+}
 
 // ssr data fetching
-export const getServerSideProps: GetServerSideProps = async ({
-  query: { page = 1 },
-}) => {
-  console.log(page);
-  const carsResp = await fetch(`${baseUrl}/car/search?page_number=${page}`);
+export const getServerSideProps: GetServerSideProps = async () => {
+  const res = await fetch(`${baseUrl}/make?popular=true`);
+  const data: DataProps = await res.json();
+
+  const carsResp = await fetch(`${baseUrl}/car/search?page_number=1`);
   const cars: CarProps = await carsResp.json();
 
-  return { props: { cars } };
+  return { props: { data, cars } };
 };
