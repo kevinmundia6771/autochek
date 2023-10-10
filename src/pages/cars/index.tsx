@@ -1,46 +1,70 @@
-import Navbar from "@layouts/Navbar";
+import CarCard from "@components/CarCard";
 import RootLayout from "@layouts/RootLayout";
-import Hero from "@sections/Hero";
-import PopularBrands from "@sections/PopularBrands";
-import PopularCars from "@sections/PopularCars";
+import { Container, Grid, Pagination, Stack } from "@mui/material";
 import { baseUrl } from "@utils/constants";
-import { CarProps, DataProps } from "@utils/types";
+import { CarProps } from "@utils/types";
 import { GetServerSideProps } from "next";
-import Head from "next/head";
-
-interface IBrandProps {
-  data: DataProps;
-}
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface ICarProps {
   cars: CarProps;
 }
 
-type Props = IBrandProps & ICarProps;
+const Cars = ({ cars }: ICarProps) => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams()!;
 
-export default function Home({ data, cars }: Props) {
+  const handleChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    // Courtesy of next documentation on search params
+    // https://nextjs.org/docs/app/api-reference/functions/use-search-params#updating-searchparams
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(value));
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   return (
     <RootLayout>
-      <Head>
-        <title>autochek</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* <link rel="icon" href="/favicon.ico" /> */}
-      </Head>
+      <Container>
+        <Grid container spacing={2} mt={4}>
+          {cars.result.map((car) => {
+            return (
+              <Grid item xs={12} md={6} lg={4} key={car.id}>
+                <CarCard car={car} />
+              </Grid>
+            );
+          })}
+        </Grid>
 
-      <Hero />
-      <PopularBrands brands={data.makeList} />
-      <PopularCars cars={cars.result} />
+        <Stack
+          direction={"row"}
+          alignItems={"center"}
+          justifyContent={"center"}
+          mt={5}
+        >
+          <Pagination
+            count={cars.pagination.pageSize}
+            page={cars.pagination.currentPage}
+            onChange={handleChange}
+            variant="outlined"
+            shape="rounded"
+          />
+        </Stack>
+      </Container>
     </RootLayout>
   );
-}
+};
+
+export default Cars;
 
 // ssr data fetching
-export const getServerSideProps: GetServerSideProps = async () => {
-  const res = await fetch(`${baseUrl}/make?popular=true`);
-  const data: DataProps = await res.json();
-
-  const carsResp = await fetch(`${baseUrl}/car/search?page_number=1`);
+export const getServerSideProps: GetServerSideProps = async ({
+  query: { page = 1, query = "" },
+}) => {
+  const carsResp = await fetch(
+    `${baseUrl}/car/search?page_number=${page}${query && `&query=${query}`}`
+  );
   const cars: CarProps = await carsResp.json();
 
-  return { props: { data, cars } };
+  return { props: { cars } };
 };
