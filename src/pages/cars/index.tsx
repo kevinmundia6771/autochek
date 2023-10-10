@@ -43,7 +43,7 @@ const Cars = ({ cars }: ICarProps) => {
           mt={5}
         >
           <Pagination
-            count={cars.pagination.pageSize}
+            count={Math.ceil(cars.pagination.total / cars.pagination.pageSize)}
             page={cars.pagination.currentPage}
             onChange={handleChange}
             variant="outlined"
