@@ -45,6 +45,7 @@ export interface Car {
 	fuelType: string;
 	marketplaceVisibleDate: string;
 	ccMeasurement: number;
+	
 }
 
 export interface Stats {
